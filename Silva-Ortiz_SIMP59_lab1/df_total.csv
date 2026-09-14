@@ -1,0 +1,46 @@
+"Country_code","Country","Economic_activity","Total_Supply","Total_Use","Water_Balance","Water_used_percentage","Water_overuse"
+"AUS","Australia","Total - all activities",45491.6744224378,20199.6704634538,25292.003958984,44.4030049891739,FALSE
+"BEL","Belgium","Total - all activities",28875.56506,11931.7440649188,16943.8209950813,41.3212487448332,FALSE
+"BGR","Bulgaria","Total - all activities",10917.7,19372.7599865723,-8455.05998657227,177.443600635411,TRUE
+"BLR","Belarus","Total - all activities",6684.2571,3283.2571,3401,49.1192521604233,FALSE
+"BRA","Brazil","Total - all activities",4594.067,4594.067,0,100,FALSE
+"CRI","Costa Rica","Total - all activities",15540.7807320927,34626.2317740134,-19085.4510419207,222.808830334425,TRUE
+"DEU","Germany","Total - all activities",142889.7884,82168.3939125,60721.3944875,57.5047348257533,FALSE
+"DNK","Denmark","Total - all activities",4369.04,2442.89002197266,1926.14997802734,55.9136565921268,FALSE
+"ESP","Spain","Total - all activities",179658.4,107815.400341797,71842.9996582031,60.0113328081497,FALSE
+"EST","Estonia","Total - all activities",5504.33211,3257.94592,2246.38619,59.188759960198,FALSE
+"FIN","Finland","Total - all activities",280,280,0,100,FALSE
+"FRA","France","Total - all activities",118181.706,716426.546,-598244.84,606.207652815572,TRUE
+"GEO","Georgia","Total - all activities",9155,4172,4983,45.5707263790279,FALSE
+"GRC","Greece","Total - all activities",48180.504,33990.9550898437,14189.5489101562,70.5491895432305,FALSE
+"HRV","Croatia","Total - all activities",1096.90909,46244.13609,-45147.227,4215.85858952085,TRUE
+"JPN","Japan","Total - all activities",329092,172180,156912,52.3197160672396,FALSE
+"LTU","Lithuania","Total - all activities",2139.148871,3952.61044471289,-1813.46157371289,184.774912036166,TRUE
+"NLD","Netherlands","Total - all activities",64703.966,27720.966,36983,42.8427617559023,FALSE
+"NOR","Norway","Total - all activities",791.3993,791.3993,0,100,FALSE
+"POL","Poland","Total - all activities",57701.03,20992.24,36708.79,36.3810490038046,FALSE
+"RUS","Russia","Total - all activities",258723,125922,132801,48.6705859162115,FALSE
+"SAU","Saudi Arabia","Total - all activities",65928.64,34020.64,31908,51.6022171851262,FALSE
+"SVK","Slovak Republic","Total - all activities",3453.925,2291.525,1162.4,66.345534428223,FALSE
+"TUR","Türkiye","Total - all activities",37564.674,20944.674,16620,55.7563044470984,FALSE
+"ARM","Armenia","Total - all activities",12260.0938,5787.5939,6472.4999,47.2067668846057,FALSE
+"AZE","Azerbaijan","Total - all activities",55011.542,25402.942,29608.6,46.1774767193401,FALSE
+"CHE","Switzerland","Total - all activities",1463,1350,113,92.2761449077239,FALSE
+"COL","Colombia","Total - all activities",607201.972998428,215578.780499214,391623.192499214,35.5036363657817,FALSE
+"CZE","Czechia","Total - all activities",8960.1,4971.4,3988.7,55.4837557616545,FALSE
+"KOR","Korea","Total - all activities",95454,47727,47727,50,FALSE
+"ROU","Romania","Total - all activities",2574.78,2638.76,-63.98,102.484872493961,TRUE
+"SVN","Slovenia","Total - all activities",4622.81,88716.09,-84093.28,1919.09444688404,TRUE
+"ARG","Argentina","Total - all activities",1914.425,1914.425,0,100,FALSE
+"AUT","Austria","Total - all activities",1089.373,1089.373,0,100,FALSE
+"CHL","Chile","Total - all activities",977,977,0,100,FALSE
+"LVA","Latvia","Total - all activities",1390.797,1072.97100036621,317.825999633789,77.147923123663,FALSE
+"MEX","Mexico","Total - all activities",527531.98646304,208076.51510352,319455.47135952,39.4433930914061,FALSE
+"PER","Peru","Total - all activities",213409.5724,147991.5724,65418,69.3462672436337,FALSE
+"CHN","China (People’s Republic of)","Total - all activities",2366680,1183340,1183340,50,FALSE
+"HUN","Hungary","Total - all activities",1752.3221,1145.4402,606.8819,65.3669893223398,FALSE
+"ISR","Israel","Total - all activities",5201,3152.2,2048.8,60.6075754662565,FALSE
+"LUX","Luxembourg","Total - all activities",393.666,200.688999992371,192.977000007629,50.9795105476141,FALSE
+"MDA","Moldova","Total - all activities",3551.2095,1811.2095,1740,51.0026091110648,FALSE
+"UKR","Ukraine","Total - all activities",44115.9,21804.9,22311,49.4263972853325,FALSE
+"ZAF","South Africa","Total - all activities",81461.28,41797.3525,39663.9275,51.3094718128662,FALSE

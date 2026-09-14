@@ -1,0 +1,475 @@
+
+---
+title: "Lab 1: Assesment of dataset containing water supply and use"
+author: "Student: Isabella Silva Ortiz"
+date: "`r Sys.Date()`"
+output: html_document
+runtime: shiny
+---
+
+# Setting up packages, libraries, importing data
+
+```{r setup, include=FALSE}
+
+# Packages and libraries ----
+
+#install.packages("tidyverse")
+#install.packages("ggplot2")
+#install.packages("readr")
+#install.packages("jsonlite")
+#install.packages("knitr")
+#install.packages("shiny")
+
+library(tidyverse)
+library(ggplot2)
+library(readr)
+library(purrr)
+library(dplyr)
+library(jsonlite)
+library(knitr)
+library(tidyr)
+library(shiny)
+
+# Importing data 
+
+data_water <- read_csv("oecd.csv")
+
+```
+
+# Exploration of data
+
+```{r}
+
+# How does the structure of the dataset looks like?
+
+str(data_water)
+
+# What years are in the dataset and which ones are missing?
+
+sorted_years <- sort(unique(data_water$TIME_PERIOD))
+
+print(sorted_years)
+
+print("No missing years!")
+
+# What are the unique values of variables?
+
+map(data_water[, c("STRUCTURE_ID", "STRUCTURE_NAME", "ACTION", "FREQ", "Frequency of observation", "UNIT_MEASURE", "Unit of measure", "SUPPLY_USE", "Supply and use", "VARIABLE", "Variable", "ACTIVITY", "Economic activity" )], unique)
+
+# Lets look at ALL unique values of ALL variables except for obs_value
+# because its really long.
+
+map(select(data_water, -OBS_VALUE), unique)
+
+# Visualizing number of countries with observations throughout the years 
+
+# Which years have the most amount of observations?
+
+data_water %>%
+  count(TIME_PERIOD) %>%
+  arrange(desc(n))  
+
+
+```
+
+# Cleaning
+
+## Part 1
+
+```{r}
+
+# Creating new object that stores the dataset without 20 unwanted variables.
+
+df <- data_water %>% 
+ select(
+   c(REF_AREA, `Reference area`, Measure, `Supply and use`, Variable, 
+          `Economic activity`, TIME_PERIOD, OBS_VALUE)
+   )
+
+#view(df)
+
+# Checking if there any NAs / missing values in the dataset
+
+any(is.na(df)) # If FALSE = absence of NAs; if TRUE = presence of NAs
+
+# Renaming variables: all variables to more intuitive names
+
+df <- df %>% 
+  rename(
+    Country_code = REF_AREA,
+    Country = `Reference area`,
+    Water_flow = Variable,
+    Supply_and_use = `Supply and use`,
+    Year = TIME_PERIOD,
+    Value_in_millions = OBS_VALUE,
+    Category = Measure,
+    Economic_activity = `Economic activity`
+    )
+
+# Renaming values: typo in one of the variables and shortening name of another 
+# value
+
+df <- df %>% 
+  mutate(
+    Category = recode(Category,
+      "Surface and grounwater" = "Surface and groundwater"),
+    Economic_activity = recode(Economic_activity,
+      "Water supply; sewerage, waste management and remediation activities" = 
+                                 "Sewerage, waste management and remediation")
+  )
+
+#view(df)
+
+# Checking structure of new dataset
+
+str(df)
+
+# Recoding some of the variables from character to factor
+
+df <- df %>% 
+  mutate(
+    Country_code = as_factor(Country_code),
+    Country = as_factor(Country),
+    Category = as_factor(Category),
+    Supply_and_use = as_factor(Supply_and_use),
+    Water_flow = as_factor(Water_flow),
+    Economic_activity = as_factor(Economic_activity)
+  )
+
+str(df)
+
+# Now, it is best to center in one year as time-series analysis requires more complexity.
+# Let's redo what was done in the exploration section in looking for most amount of observations for most amount of countries.
+
+# Years with most amount of observations
+
+df %>%
+  count(Year) %>%
+  arrange(desc(n))  
+
+# Years with most amount of observations counting number of distinct countries per year
+
+df %>%
+  group_by(Year) %>%
+  summarise(
+    observations = n(),               
+    countries = n_distinct(Country)   
+  ) %>%
+  arrange(desc(countries))
+
+# Choosing year 2019
+# Filtering out observations from other years, and creating new dataframe with just year 2019
+
+df_2019 <- df %>% 
+  filter(Year == "2019")
+
+#view(df_2019)
+
+str(df_2019)
+
+# Checking which countries have both values of use and supply in the Supply_and_use variable
+
+result_2 <- df_2019 %>%
+  group_by(Country) %>%
+  summarise(
+    has_supply_and_use = all(c('Supply', 'Use') %in% unique(Supply_and_use))
+  ) %>%
+  filter(has_supply_and_use == TRUE)
+
+# Looking at the results 
+
+print(result_2)
+kable(result_2) #nicer output in a table!
+
+# Now that we know which countries we need, lets filter one more time.
+# Filtering countries into an object
+
+country_names <- result_2 %>%
+  pull(Country)
+
+# Printing the object to rectify it is correct
+
+print(country_names)
+
+# Filtering out countries not having BOTH supply and use into new data frame
+
+df_final <- df_2019 %>% 
+  filter(Country %in% country_names)
+
+#view(df_final)
+
+# Rechecking the countries we wanted are indeed in the dataset
+
+unique(df_final$Country) #they are!
+
+# Removing year column as it does not give information that is needed anylonger
+
+df_final$Year <- NULL
+
+view(df_final)
+
+```
+
+## Part 2
+
+```{r}
+
+# Function Pivot wider for the Supply_and_Use variable
+
+df_final <- df_final %>%
+  pivot_wider(names_from = Supply_and_use, 
+              values_from = Value_in_millions, values_fill = 0)
+
+view(df_final)
+
+# Function Group by country and economic activity, and Summarize 
+
+df_all <- df_final %>%
+  group_by(Country_code, Country, Economic_activity,) %>%
+  summarise(
+    Total_Supply = sum(Supply, na.rm = TRUE),
+    Total_Use = sum(Use, na.rm = TRUE),
+    Water_Balance = Total_Supply - Total_Use
+  ) %>%
+  arrange(Country, desc(Water_Balance))
+
+#view(df_all)
+
+# Is the new datafrmae still grouped?
+
+is_grouped_df(df_all)
+
+# Ungrouping the dataframe
+
+df_all <- df_all %>% ungroup()
+
+# Some of the supply and use values are both zero. They should be filter out
+# as we do not want to have them in the data if both as zero as they
+# would not give that much information, and they might be difficult to handle 
+# when performing the following cleaning steps and visualizations.
+
+df_all <- df_all %>% 
+  filter(!(Total_Supply == 0 & Total_Use == 0))
+
+# Adding two new variables: "Water_used_percentage", and "Water_overuse".
+# First variable indicates the percentage of water used over the water available.
+# Second variable describes if there is presence of overuse of water. That means,
+# if the use o water was greater than the supply. "TRUE" equals to presence of
+# water overuse, and "FALSE" equals to absence/no water overuse.
+
+df_all <- df_all %>% 
+  mutate(
+    Water_used_percentage = (Total_Use / Total_Supply)*100,
+    Water_overuse = if_else(Total_Use > Total_Supply, TRUE, FALSE) 
+  )
+  
+#view(df_all)
+
+# Now I am running into a problem. If supply is equal to 0, then the 
+# operation for the percentage will be infinite. This also brings issues
+# for labeling of overuse of water. 
+
+df_all <- df_all %>% 
+  mutate(
+    Water_used_percentage = case_when(
+      Total_Supply == 0 & Total_Use > 0 ~ NA, 
+      TRUE ~ (Total_Use / Total_Supply) * 100   
+    ),
+    Water_overuse = if_else(
+      Total_Use > Total_Supply | (Total_Supply == 0 & Total_Use > 0), 
+                           TRUE, FALSE) 
+  )
+
+#view(df_all)
+
+# Now that we have our base df, we will create a dataframe with only economic
+# activity called "Total - all activities"
+
+df_total <- df_all %>% 
+  filter(Economic_activity == "Total - all activities")
+
+view(df_total)
+
+# Some of the countries did not have all of the 8 economic activities. 
+# Lets do a vector with all values of the wanted variable.
+
+all_econ_act <- unique(df_all$Economic_activity)
+
+# Filtering the countries that have all economic activities except 
+# "Total - all activities" into new data frame.
+
+df_econ <- df_all %>%
+  filter(Economic_activity != "Total - all activities") %>% 
+  group_by(Country) %>% 
+  filter(all(all_econ_act[all_econ_act != "Total - all activities"] 
+             %in% Economic_activity)) %>%
+  ungroup()
+
+# Creating a new variable that describes the percentage of water used
+# per each economic activity over the total of water supplied in that country
+
+# Extracting the total supply from df_total 
+# that already has "Total - all activities" rows
+
+country_total_supply <- df_total %>%
+  select(Country, Country_Total_Supply = Total_Supply)
+
+# Left join value of Total supply 
+
+df_econ <- df_econ %>%
+  left_join(country_total_supply, by = "Country")
+
+# Calculating percentages
+
+df_econ <- df_econ %>% 
+  mutate(
+    Sector_use_percentage = (Total_Use / Country_Total_Supply) * 100
+  )
+
+view(df_econ)
+
+# Saving dataframes (df_total) and (df_econ)
+
+write.csv(df_total, "df_total.csv", row.names = FALSE)
+write.csv(df_econ, "df_econ.csv", row.names = FALSE)
+
+```
+
+# Visualizations
+
+### Graph 1 
+
+```{r}
+# National water use by economic sector -percentage-
+
+# Version 1: Normal facet_wrap graph
+
+graph_1 <- ggplot(df_econ, aes(x = Economic_activity,
+                    y = Sector_use_percentage, 
+                    fill = Economic_activity)) +
+  geom_bar(stat = "identity") +
+  facet_wrap(~ Country, scales = "free_y") +
+  theme_minimal() +
+  labs(
+    title = "Graph 1: Water Use by Economic activity as Percentage of Country's Total Water Supply",
+    x = NULL,
+    y = "Percentage of Water Used (%)",
+    fill = "Economic Activity",
+    caption = "Source: OECD (2024), Water accounts - supply and use [Dataset], OECD Data Explorer") +
+  theme(axis.text.x = element_blank(),
+        legend.text = element_text(size = 7),
+        legend.key.size = unit(0.5, "cm"),
+        )
+
+print(graph_1)
+
+ggsave("national_water_use_economic sector.png", plot = graph_1, width = 10, 
+       height = 6, units = "in", bg = "white")
+
+# Version 2: Interactive shinyapp graph
+
+# UI portion of the app
+
+ui <- fluidPage(
+  titlePanel("Water Use by Economic Activity"),
+  
+  sidebarLayout(
+    sidebarPanel(
+      selectInput("Country", "Select Country:",
+                  choices = unique(df_econ$Country), 
+                  selected = unique(df_econ$Country)[1])
+      ),
+    
+    mainPanel(
+      plotOutput("facet_plot")  
+    )
+  )
+)
+
+# Server logic for the Shiny app
+
+server <- function(input, output) {
+  
+  output$facet_plot <- renderPlot({
+    # Filtering the data for only the selected country
+    filtered_data <- df_econ %>% 
+      filter(Country == input$Country)
+    
+    ggplot(filtered_data, aes(x = Economic_activity, 
+                           y = Sector_use_percentage, 
+                           fill = Economic_activity)) +
+      geom_bar(stat = "identity") +
+      theme_minimal() +
+      labs(
+        title = paste("Water Use by Economic Activity in", input$Country),
+        x = NULL,
+        y = "Percentage of Water Used (%)",
+        fill = "Economic Activity",
+        caption = "Source: OECD (2024), Water accounts - supply and use [Dataset], OECD Data Explorer"
+      ) +
+      theme(
+        axis.text.x = element_blank(),
+        )
+  })
+}
+
+# Output
+shinyApp(ui = ui, server = server)
+
+```
+
+### Graph 2
+
+```{r}
+
+# Water balance plot - numeric -
+
+graph_2 <- ggplot(df_total, aes(y = reorder(Country,Water_Balance),
+                     x = Water_Balance,
+                      fill = Water_Balance > 0)) +
+  geom_bar(stat = "identity") +
+  theme_minimal() +
+  labs(title = "Graph 2: Total Water Balance by Country", 
+       subtitle = "Amount of water supplied minus water used",
+       x = "Million cubic meters", 
+       y = "Country",
+       fill = "Higher than zero",
+       caption = "Source: OECD (2024), Water accounts - supply and use [Dataset], OECD Data Explorer") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(graph_2)
+
+ggsave("water_balance_plot.png", plot = graph_2, width = 10, height = 6, units = "in", bg = "white")
+
+```
+
+### Graph 3
+
+```{r}
+
+# Overconsumption plot - percentage - 
+
+graph_3 <- ggplot(df_total, aes(x = reorder(Country, -Water_used_percentage), 
+                     y = Water_used_percentage, 
+                     fill = Water_used_percentage > 100)) +
+  geom_bar(stat = "identity", position = "dodge") +
+  theme_minimal() +
+  scale_fill_manual(values = c("TRUE" = "red", "FALSE" = "blue"), 
+                    labels = c("FALSE" = "Surplus or Balanced (≤ 100%)",
+                               "TRUE" = "Deficit (> 100%)")) +
+  labs(title = "Graph 3: Total Percentage of Water Consumed per Country", 
+       subtitle = "Percentage of used water over the supplied water",
+       x = "Country", 
+       y = "Percentage of total water consumed of the available water (%)", 
+       fill = "Overconsumption",
+       caption = "Source: OECD (2024), Water accounts - supply and use [Dataset], OECD Data Explorer") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+print(graph_3)
+
+ggsave("overconsumption_plot.png", plot = graph_3, width = 10, height = 6, units = "in", bg = "white")
+
+```
+
+
+
